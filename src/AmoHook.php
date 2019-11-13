@@ -6,21 +6,31 @@ namespace Opravdin;
  */
 class AmoHook {
     /**
-     * Callbacks from methods
+     * @var array Callbacks from methods
      * Format: $callbacks[entity][action] = [callback, callback...]
      */
     protected $callbacks = [];
 
     /**
-     * Raw AmoHook body
+     * @var mixed Raw AmoHook body
      */
     protected $rawBody = [];
 
     /**
-     * Pretty data
+     * @var array Pretty data
      */
     protected $prettyData = [];
 
+    /**
+     * @var function Error handler
+     */
+    protected $errorHandlers = [];
+
+    /**
+     * @var function After callback
+     */
+    protected $afterHandlers = [];
+    
     /**
      * Construct instance from data
      */
@@ -87,7 +97,7 @@ class AmoHook {
     }
 
     /**
-     * Register callback in chain
+     * Register event callback
      */
     public function register($entities, $actions, $callback) : AmoHook {
         // Creating arrays from single strings
@@ -107,21 +117,55 @@ class AmoHook {
     }
 
     /**
+     * Register error callback
+     */
+    public function onError($callback) : AmoHook {
+        $this->errorHandlers[] = $callback;
+        return $this;
+    }
+
+    /**
+     * Register after callback
+     */
+    public function after($callback): AmoHook {
+        $this->afterHandlers[] = $callback;
+        return $this;
+    }
+
+    /**
      * Execute callback function
      */
     private function executeCallback($entity, $action, $data) : void {
         $e = [$entity, 'any'];
         $a = [$action, 'any'];
+        $isCritical = false;
         foreach ($e as $entity) {
             foreach ($a as $action) {
                 if (!isset($this->callbacks[$entity][$action])) {
                     continue;
                 }
-                foreach ($this->callbacks[$entity][$action] as $callback) {         
-                    $r = $callback($data);
+                foreach ($this->callbacks[$entity][$action] as $callback) {  
+                    $result = null;
+                    try {
+                        $result = $callback($data);
+                    } catch(\Throwable $e) {
+                        if (count($this->errorHandlers) > 0) {
+                            foreach ($this->errorHandlers as $h) {
+                                $isCritical = $h($e, $data, $entity, $action) || $isCritical;
+                            }
+                        }
+                    }     
+                    if (count($this->afterHandlers) > 0) {
+                        foreach ($this->afterHandlers as $h) {
+                            $h($result, $data);
+                        }
+                    }
+                    if ($isCritical === true) {
+                        return;
+                    }
                 }
             }
         }
-        
+        return;        
     }
 }
