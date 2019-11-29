@@ -1,7 +1,6 @@
 {
     "name": "opravdin/amohook",
     "type": "library",
-    "version": "1.0.0",
     "description": "Makes your AmoCRM Webhooks looks pretty",
     "keywords": [
         "AmoCRM",
