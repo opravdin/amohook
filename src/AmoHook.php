@@ -89,7 +89,7 @@ class AmoHook {
     /**
      * Handle webhook chain
      */
-    public function handle() : void {
+    public function handle(){
         $data = $this->get();
         foreach ($data as $event) {
             $this->executeCallback($event['entity'], $event['action'], $event);
@@ -135,7 +135,7 @@ class AmoHook {
     /**
      * Execute callback function
      */
-    private function executeCallback($entity, $action, $data) : void {
+    private function executeCallback($entity, $action, $data){
         $e = [$entity, 'any'];
         $a = [$action, 'any'];
         $isCritical = false;
