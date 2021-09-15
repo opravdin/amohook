@@ -1,5 +1,5 @@
 <?php
-namespace Opravdin;
+namespace Opravdin\AmoHook;
 
 /**
  * AmoCRM Webhook processor class
@@ -22,14 +22,19 @@ class AmoHook {
     protected $prettyData = [];
 
     /**
-     * @var function Error handler
+     * @var array Error handlers
      */
     protected $errorHandlers = [];
 
     /**
-     * @var function After callback
+     * @var array After callbacks
      */
     protected $afterHandlers = [];
+
+    /**
+     * @var bool Throw errors
+     */
+    protected $throwErrors = false;
     
     /**
      * Construct instance from data
@@ -125,10 +130,23 @@ class AmoHook {
     }
 
     /**
-     * Register after callback
+     * Register callback which will be executed
+     * after each handler finish it's job  
+     * Callback params:  
+     * 
+     * @param function $callback Callback function
      */
     public function after($callback): AmoHook {
         $this->afterHandlers[] = $callback;
+        return $this;
+    }
+
+    /**
+     * Set error throwing flag
+     * @param bool $mode Throw mode
+     */
+    public function setErrorThrowing($mode) {
+        $this->throwErrors = $mode;
         return $this;
     }
 
@@ -153,13 +171,19 @@ class AmoHook {
                             foreach ($this->errorHandlers as $h) {
                                 $isCritical = $h($e, $data, $entity, $action) || $isCritical;
                             }
+                        } else if ($this->throwErrors === true) {
+                            throw $e;
                         }
                     }     
+
+                    // Executing "after" handlers
                     if (count($this->afterHandlers) > 0) {
                         foreach ($this->afterHandlers as $h) {
                             $h($result, $data);
                         }
                     }
+
+                    // Terminating future execution of handlers if error handler reports critical error
                     if ($isCritical === true) {
                         return;
                     }

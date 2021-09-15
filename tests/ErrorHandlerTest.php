@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use Opravdin\AmoHook;
+use Opravdin\AmoHook\AmoHook;
 use PHPUnit\Framework\TestCase;
 
 final class ErrorHandlerTest extends TestCase
