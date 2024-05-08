@@ -23,7 +23,7 @@ use Opravdin\AmoHook\Entities;
 
 // Для Laravel удобнее применить $request->all() вместо $_POST
 AmoHook::build($_POST) 
-    ->register('any', 'any' function ($payload) {
+    ->register('any', 'any', function ($payload) {
         // Вызовется для любой сущности при любом событии, подходит для отладки и логгирования приходящих данных
         Log::debug("Action: {$payload['action']} on entity {$payload['entity']}");
     })
@@ -42,7 +42,7 @@ AmoHook::build($_POST)
     // Можно подключить методы для обработки ошибок (один или несколько)
     ->onError(function ($exception, $payload, $entity, $action) {
         // Этот код выполнится при возникновении исключения при обработке
-        Log::error("Произошла ошибка при обработке хука: ".$e->getMessage());
+        Log::error("Произошла ошибка при обработке хука: ".$exception->getMessage());
 
         /**
          * $exception - возникшее исключение
